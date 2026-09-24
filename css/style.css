@@ -109,7 +109,6 @@ html.dark .logo-dark { display:inline; }
    color: #fff;
    border: none;
    border-radius: 4px;
-   background: #fff;
 }
 html.dark #cookie-banner {
    background: #253447;
@@ -123,7 +122,6 @@ html.dark #cookie-banner {
 }
 .hero-buttons a { display:inline-block; padding:12px 24px; border-radius:8px; font-weight:600; margin:6px 8px; color:#2AA9E0; background:#fff; }
 .hero-buttons a:hover { background:#E6ECFF; }
-   color: inherit;
 
 html.dark .cookie-banner-content a {
    color: #7DD3FC;
