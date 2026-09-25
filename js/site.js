@@ -86,9 +86,15 @@
 
   const inject = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
 
+  const loadFragment = (id, file) => {
+    const el = document.getElementById(id);
+    if (el && el.innerHTML.trim()) return Promise.resolve();
+    return fetch(file).then(r=>r.text()).then(html=>inject(id, html));
+  };
+
   Promise.all([
-    fetch(headerFile).then(r=>r.text()).then(h=>inject("header", h)),
-    fetch(footerFile).then(r=>r.text()).then(f=>inject("footer", f))
+    loadFragment("header", headerFile),
+    loadFragment("footer", footerFile)
   ]).then(()=>{
     document.getElementById('current-year').innerText = new Date().getFullYear();
     wireLanguagePreference();
@@ -151,4 +157,105 @@
       }
     }
   }
+
+  function wireHeroImageLightbox() {
+    const heroImgs = document.querySelectorAll('.sub-hero-media img, .hero-art img');
+    if (!heroImgs.length) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      #lightbox-overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.78);
+        z-index: 2000;
+        padding: 24px;
+      }
+      #lightbox-overlay.is-visible {
+        display: flex;
+      }
+      body.lightbox-open {
+        overflow: hidden;
+      }
+      .lightbox-panel {
+        position: relative;
+        max-width: min(90vw, 1100px);
+        max-height: 90vh;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+      }
+      #lightbox-image {
+        display: block;
+        max-width: 100%;
+        max-height: 80vh;
+        width: auto;
+        height: auto;
+        border-radius: 8px;
+        object-fit: contain;
+      }
+      .lightbox-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, 0.8);
+        color: #fff;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+      }
+    `;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'lightbox-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+      <div class="lightbox-panel" role="dialog" aria-modal="true" aria-label="Forstørret bilde">
+        <button class="lightbox-close" type="button" aria-label="Lukk bilde">×</button>
+        <img id="lightbox-image" src="" alt="Forstørret bilde" />
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const lightboxImage = document.getElementById('lightbox-image');
+    const closeBtn = overlay.querySelector('.lightbox-close');
+
+    const closeLightbox = () => {
+      overlay.classList.remove('is-visible');
+      document.body.classList.remove('lightbox-open');
+      overlay.setAttribute('aria-hidden', 'true');
+    };
+
+    closeBtn.addEventListener('click', closeLightbox);
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) closeLightbox();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && overlay.classList.contains('is-visible')) {
+        closeLightbox();
+      }
+    });
+
+    heroImgs.forEach((img) => {
+      img.style.cursor = 'zoom-in';
+      img.addEventListener('click', () => {
+        lightboxImage.src = img.src;
+        lightboxImage.alt = img.alt || 'Forstørret bilde';
+        overlay.classList.add('is-visible');
+        document.body.classList.add('lightbox-open');
+        overlay.setAttribute('aria-hidden', 'false');
+      });
+    });
+  }
+
+  wireHeroImageLightbox();
 })();
